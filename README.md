@@ -3,18 +3,33 @@ Java调用tensorflow pb模型进行图像分类做验证码识别，其它基本
 
 模型.pb文件
 =
-  - 字符分类使用lenet   [[GoogleDrive下载]](https://www.baidu.com/) [[BaiduYun下载]](https://www.baidu.com/) 
+模型文件已上传可以直接clone
+
+  - 字符分类使用lenet(src/main/resource/model/lennt-top.pb)   
   
-  - 图片分类使用mobilenet   [[GoogleDrive下载]](https://www.baidu.com/) [[BaiduYun下载]](https://www.baidu.com/) 
- 
+  - 图片分类使用mobilenet(src/main/resource/model/mobilenet-pic.pb)
+
+maven依赖
+=
+```
+<!-- https://mvnrepository.com/artifact/org.tensorflow/tensorflow -->
+<dependency>
+    <groupId>org.tensorflow</groupId>
+    <artifactId>tensorflow</artifactId>
+    <version>1.14.0</version>
+</dependency>
+```
 使用方法
 =
-   1.将.pb文件放入floder文件夹
+  - 执行 com.cooooode.java12306.service.VerifyService 的mian方法
   
-   2.更改图片路径
- 
-   3.运行main方法
-
-在线识别
+  ```
+  Usage: java VerifyService image image_path
+      or java VerifyService base64 base64_code
+ ```
+在线识别Demo
 =
 [http://167.179.114.177:8080/](http://167.179.114.177:8080/)
+<p align="center">
+	<img src="https://github.com/vua/Java12306/blob/master/image/%E5%9C%A8%E7%BA%BF%E9%AA%8C%E8%AF%81%E5%9B%BE.png" alt="Sample"  width="140" height="300">
+</p>
