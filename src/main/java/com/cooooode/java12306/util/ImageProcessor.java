@@ -32,6 +32,7 @@ public class ImageProcessor {
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
     /*切图坐标*/
+    
     static final ArrayList<int[]> position = new ArrayList() {{
         add(new int[]{0, 30, 120, 290});
         add(new int[]{41, 108, 5, 73});
