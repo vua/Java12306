@@ -1,6 +1,5 @@
 package com.cooooode.java12306.service;
 
-
 import com.cooooode.java12306.util.ImageProcessor;
 import com.cooooode.java12306.util.LabelImage;
 import org.tensorflow.Tensor;
