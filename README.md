@@ -1,5 +1,5 @@
 # Java12306
-Java调用tensorflow pb模型进行图像分类做验证码识别，其它基本图像处理如图片切割、reszie、类型转换等由java完成
+Java调用tensorflow pb模型进行图像分类做验证码识别，其它基本图像处理由java完成
 
 模型.pb文件
 =
