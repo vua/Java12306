@@ -31,5 +31,5 @@ maven依赖
 =
 [http://www.dill.fun/](http://www.dill.fun/)
 <p align="left">
-	<img src="https://github.com/vua/Java12306/blob/master/image/%E5%9C%A8%E7%BA%BF%E9%AA%8C%E8%AF%81%E5%9B%BE.png" alt="Sample"  width="300" height="500">
+	<img src="https://github.com/vua/Java12306/blob/master/image/dill.fun.png" alt="Sample" >
 </p>
