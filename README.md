@@ -31,7 +31,7 @@ maven依赖
 =
 [demo演示地址](http://www.dill.fun/)
 
-[demo源码地址](https://github.com/vua/Java12306/tree/master)
+[demo源码地址](https://github.com/vua/Java12306/tree/web)
 <p align="left">
 	<img src="https://github.com/vua/Java12306/blob/master/image/dill.fun.png" alt="Sample" >
 </p>
