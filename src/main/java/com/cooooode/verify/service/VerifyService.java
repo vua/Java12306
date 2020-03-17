@@ -1,15 +1,17 @@
-package com.cooooode.java12306.service;
+package com.cooooode.verify.service;
 
-import com.cooooode.java12306.util.ImageProcessor;
-import com.cooooode.java12306.util.LabelImage;
+import com.cooooode.verify.util.ImageProcessor;
+import com.cooooode.verify.util.LabelImage;
+//import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.stereotype.Service;
 import org.tensorflow.Tensor;
-import org.tensorflow.TensorFlow;
 
+import javax.annotation.PostConstruct;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.Base64;
-import java.util.List;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -18,14 +20,18 @@ import java.util.regex.Pattern;
  * @author: vua
  * @create: 2020-02-07 14:03
  */
-
+@Service
 public class VerifyService {
-    private static final String modelDir = VerifyService.class.getClassLoader().getResource("model").toString();
 
-    private static LabelImage labelImage = new LabelImage();
-    private static List<String> labels;
-    private static byte[] graphMobileNet;
-    private static byte[] graphLenet;
+
+    public static int init = 0;
+    static final String modelDir = VerifyService.class.getClassLoader().getResource("model").toString();
+
+    static LabelImage labelImage = new LabelImage();
+    static List<String> labels;
+    static byte[] graphMobileNet;
+    static byte[] graphLenet;
+    static ThreadGroup group = new ThreadGroup("tensorflow");
 
     static {
 //        graphMobileNet = labelImage.readAllBytesOrExit(Paths.get(modelDir, "train-mobilenet-pic.pb"));
@@ -33,6 +39,7 @@ public class VerifyService {
 //        labels = LabelImage.readAllLinesOrExit(Paths.get(modelDir, "label.txt"));
 
         try (
+                ///usr/java/project/verify/src/main/resources/model/mobilenet-pic.pb
                 InputStream mobilenet = VerifyService.class.getClassLoader().getResourceAsStream("model/mobilenet-pic.pb");
                 InputStream lenet = VerifyService.class.getClassLoader().getResourceAsStream("model/lenet-top.pb");
                 InputStream label = VerifyService.class.getClassLoader().getResourceAsStream("model/label.txt");
@@ -48,10 +55,16 @@ public class VerifyService {
 
     }
 
-    private static String predictPicClasses(byte[] imageBytes) {
+    @PostConstruct
+    public void init() {
+
+        proccess(ImageProcessor.imageToBytes(new BufferedImage(300, 200, BufferedImage.TYPE_INT_RGB)));
+    }
+
+    public String predictPicClasses(byte[] imageBytes) {
         //byte[] imageBytes = LabelImage.readAllBytesOrExit(Paths.get(""));
 
-        try (Tensor<Float> image = LabelImage.constructAndExecuteGraphToNormalizeImage(imageBytes, 67, 68)) {
+        try (Tensor<Float> image = LabelImage.constructAndExecuteGraphToNormalizeImage(imageBytes, 67, 68, 1)) {
 
             float[] labelProbabilities = LabelImage.executeInceptionGraph(graphMobileNet, image, "input_1", "act_softmax/Softmax");
             int bestLabelIdx = LabelImage.maxIndex(labelProbabilities);
@@ -63,8 +76,8 @@ public class VerifyService {
         }
     }
 
-    private static String predictTopClasses(byte[] imageBytes) {
-        try (Tensor<Float> image = LabelImage.constructAndExecuteGraphToNormalizeImage(imageBytes, 30, 60)) {
+    public String predictTopClasses(byte[] imageBytes) {
+        try (Tensor<Float> image = LabelImage.constructAndExecuteGraphToNormalizeImage(imageBytes, 30, 60, 1)) {
 
             float[] labelProbabilities = LabelImage.executeInceptionGraph(graphLenet, image, "conv2d_1_input", "dense_2/Softmax");
             int bestLabelIdx = LabelImage.maxIndex(labelProbabilities);
@@ -76,16 +89,17 @@ public class VerifyService {
         }
     }
 
-    private static boolean isBase64(String str) {
+    public boolean isBase64(String str) {
         String base64Pattern = "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$";
         return Pattern.matches(base64Pattern, str);
     }
 
-    private static class PicThread extends Thread {
+    class PicThread extends Thread {
         private BufferedImage[] imgs;
         private StringBuilder response;
 
         PicThread(BufferedImage[] imgs, StringBuilder response) {
+            super(group, "img");
             this.imgs = imgs;
             this.response = response;
         }
@@ -107,12 +121,13 @@ public class VerifyService {
         }
     }
 
-    private static class TopThread extends Thread {
+    class TopThread extends Thread {
         private BufferedImage top;
         private StringBuilder response;
         //private String name;
 
         TopThread(BufferedImage top, StringBuilder response) {
+            super(group, "top");
             this.top = top;
             this.response = response;
             //this.name = name;
@@ -145,26 +160,8 @@ public class VerifyService {
 
         }
     }
-    private static String same(BufferedImage[] imgs){
-        StringBuilder response1 = new StringBuilder();
-        StringBuilder response2 = new StringBuilder();
-        PicThread picThread = new PicThread(imgs, response1);
-        TopThread topThread = new TopThread(imgs[0], response2);
-        picThread.start();
-        topThread.start();
-        try {
-            picThread.join();
-            topThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return response2.toString() + "\n" + response1.toString();
-    }
-    private static String process(BufferedImage image){
-        BufferedImage[] imgs = ImageProcessor.cutImage(image);
-        return same(imgs);
-    }
-    private static String process(byte[] img) {
+
+    public String proccess(byte[] img) {
         BufferedImage[] imgs = ImageProcessor.cutImage(img);
         /*String uuid = UUID.randomUUID().toString().replaceAll("-", "");
         try {
@@ -173,51 +170,19 @@ public class VerifyService {
             e.printStackTrace();
         }*/
 
-        return same(imgs);
-    }
-    private static void printUsage(PrintStream s) {
-        s.println("Usage: java -jar java12306.jar image image_path");
-        s.println("       java -jar java12306.jar base64 base64_code");
-    }
-    public static void main(String[] args) {
-        printUsage(System.err);
+        StringBuilder response1 = new StringBuilder();
+        StringBuilder response2 = new StringBuilder();
+        PicThread picThread = new PicThread(imgs, response1);
 
-        if(args.length!=2){
-            System.err.println("参数数目错误,请查看Usage");
-            System.exit(0);
+        TopThread topThread = new TopThread(imgs[0], response2);
+        picThread.start();
+        topThread.start();
+        try {
+            picThread.join();
+            topThread.join();
+        } catch (InterruptedException e) {
+            //e.printStackTrace();
         }
-        String type=args[0];
-        String value=args[1];
-        switch (type){
-            case "image":{
-                File file=new File(value);
-                if(!file.exists()){
-                    System.err.println("文件不存在");
-                    System.exit(0);
-                }
-                BufferedImage image=null;
-                try {
-                    image=ImageIO.read(file);
-                } catch (IOException e) {
-                    System.err.println("文件读取失败");
-                    System.exit(0);
-                }
-                if(image!=null)
-                    System.out.println(process(image));
-
-            }break;
-            case "base64":{
-                if(!VerifyService.isBase64(value)){
-                    System.err.println("base64 code错误");
-                    System.exit(0);
-                }
-                System.out.println(process(Base64.getDecoder().decode(value)));
-            }break;
-            default:{
-                System.err.println("参数值错误,请查看Usage");
-                System.exit(0);
-            }
-        }
-
+        return response2.toString() + "\n" + response1.toString();
     }
 }

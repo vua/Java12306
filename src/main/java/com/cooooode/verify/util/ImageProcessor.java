@@ -1,4 +1,4 @@
-package com.cooooode.java12306.util;
+package com.cooooode.verify.util;
 
 //import org.opencv.core.*;
 
@@ -7,13 +7,12 @@ package com.cooooode.java12306.util;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+//import java.awt.image.DataBufferByte;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+//import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-
-//import java.awt.image.DataBufferByte;
-//import java.io.File;
 //import java.util.UUID;
 /*
 
@@ -32,7 +31,6 @@ public class ImageProcessor {
         //System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
     /*切图坐标*/
-    
     static final ArrayList<int[]> position = new ArrayList() {{
         add(new int[]{0, 30, 120, 290});
         add(new int[]{41, 108, 5, 73});
@@ -45,33 +43,30 @@ public class ImageProcessor {
         add(new int[]{113, 180, 221, 289});
     }};
     /*切图*/
-    public static BufferedImage[] cutImage(BufferedImage image){
-        BufferedImage imgs[]=null;
-        int chunks = 9;
-        imgs = new BufferedImage[chunks];
-        Image o = image.getScaledInstance(image.getWidth(),
-                image.getHeight(), Image.SCALE_SMOOTH);
-
-        int[] temp;
-        for (int i = 0; i < position.size(); i++) {
-            temp = position.get(i);
-            int h = temp[1] - temp[0];//x
-            int w = temp[3] - temp[2];//y
-
-            imgs[i] = new BufferedImage(w, h, image.getType());
-            Graphics2D gr = imgs[i].createGraphics();
-            gr.drawImage(o, 0, 0, w, h,
-                    temp[2], temp[0], temp[3], temp[1], null);
-            gr.dispose();
-        }
-        return imgs;
-    }
     public static BufferedImage[] cutImage(byte[] byteImg) {
         BufferedImage imgs[]=null;
         try (
                 ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(byteImg)) {
             BufferedImage image = ImageIO.read(byteArrayInputStream);
-            imgs=cutImage(image);
+
+            int chunks = 9;
+            imgs = new BufferedImage[chunks];
+            Image o = image.getScaledInstance(image.getWidth(),
+                    image.getHeight(), Image.SCALE_SMOOTH);
+
+            int[] temp;
+            for (int i = 0; i < position.size(); i++) {
+                temp = position.get(i);
+                int h = temp[1] - temp[0];//x
+                int w = temp[3] - temp[2];//y
+
+                imgs[i] = new BufferedImage(w, h, image.getType());
+                Graphics2D gr = imgs[i].createGraphics();
+                gr.drawImage(o, 0, 0, w, h,
+                        temp[2], temp[0], temp[3], temp[1], null);
+                gr.dispose();
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
