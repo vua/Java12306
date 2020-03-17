@@ -1,35 +1,5 @@
-# Java12306
-Java调用tensorflow pb模型进行图像分类做验证码识别，其它基本图像处理由java完成
+# Java12306在线验证服务
 
-模型.pb文件
-=
-模型文件已上传可以直接clone
+SpringBoot项目,依托于master分支,提供12306验证码的在线识别服务
+### 在线Demo [www.dill.fun]
 
-  - 字符分类使用lenet(src/main/resource/model/lennt-top.pb)   
-  
-  - 图片分类使用mobilenet(src/main/resource/model/mobilenet-pic.pb)
-
-maven依赖
-=
-```
-<!-- https://mvnrepository.com/artifact/org.tensorflow/tensorflow -->
-<dependency>
-    <groupId>org.tensorflow</groupId>
-    <artifactId>tensorflow</artifactId>
-    <version>1.14.0</version>
-</dependency>
-```
-使用方法
-=
-  - 执行 com.cooooode.java12306.service.VerifyService 的mian方法
-  
-  ```
-  Usage: java VerifyService image image_path
-      or java VerifyService base64 base64_code
- ```
-在线识别Demo
-=
-[http://www.dill.fun/](http://www.dill.fun/)
-<p align="left">
-	<img src="https://github.com/vua/Java12306/blob/master/image/dill.fun.png" alt="Sample" >
-</p>
