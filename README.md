@@ -27,7 +27,7 @@ maven依赖
   Usage: java VerifyService image image_path
       or java VerifyService base64 base64_code
  ```
-在线识别Demo
+Online Demo
 =
 [demo演示地址](http://www.dill.fun/)
 
