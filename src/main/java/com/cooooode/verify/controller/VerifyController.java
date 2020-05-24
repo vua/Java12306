@@ -2,7 +2,10 @@ package com.cooooode.verify.controller;
 
 import com.cooooode.verify.service.RecordService;
 import com.cooooode.verify.service.VerifyService;
+import com.cooooode.verify.util.Crawling;
+import com.cooooode.verify.util.HttpClient;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +15,9 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @program: verify
@@ -23,85 +28,111 @@ import java.util.concurrent.ConcurrentHashMap;
 @Controller
 @RequestMapping("/")
 public class VerifyController {
+    static AtomicInteger VAILD_REQUEST_NUMBER=new AtomicInteger();
+    @GetMapping("/random")
+    @ResponseBody
+    public String getBase64(){
+        return Crawling.getVerifyImageBase64();
+    }
     @Autowired
     VerifyService verifyService;
     @PostMapping("")
     @ResponseBody
-    @HystrixCommand(fallbackMethod = "fallBack")
+    @HystrixCommand(fallbackMethod = "fallBack",commandProperties = {
+            @HystrixProperty(name="circuitBreaker.enabled",value = "true"), //断路器使能
+            @HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value = "10"),//10次请求中 CLOSE
+            @HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value = "60"),//有60%出错 超时则熔断 OPEN
+            @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value = "10000") //10秒后半开尝试 HALF-OPEN
+    })
     public String crack(@RequestParam("uploadImg")MultipartFile file){
+
+        VAILD_REQUEST_NUMBER.getAndIncrement();
+
         try {
-            return verifyService.proccess(file.getBytes());
-        } catch (IOException e) {
+            return verifyService.proccess(file.getBytes(),file.getOriginalFilename());
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return "";
     }
     /*降级方法*/
+
     public String fallBack(@RequestParam("uploadImg")MultipartFile file){
+        //关闭线程
+        String uuid=file.getOriginalFilename();
+        String[] values=verifyService.threadUUIDMap.get(uuid);
+        verifyService.consoleThreadMap.get(values[0]).interrupt();
+        verifyService.consoleThreadMap.get(values[1]).interrupt();
+        verifyService.threadUUIDMap.remove(uuid);
+        return "服务器忙,请重试";
+    }
+    @PostMapping("/image")
+    @ResponseBody
+    @HystrixCommand(fallbackMethod = "fallBack2",commandProperties = {
+            @HystrixProperty(name="circuitBreaker.enabled",value = "true"), //断路器使能
+            @HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value = "10"),//10次请求中 CLOSE
+            @HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value = "60"),//有60%出错 超时则熔断 OPEN
+            @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value = "10000") //10秒后半开尝试 HALF-OPEN
+    })
+    public String image(@RequestParam("uploadImg")MultipartFile file,@RequestParam("uuid") String uuid){
+
+        VAILD_REQUEST_NUMBER.getAndIncrement();
+
+        try {
+            return verifyService.proccess(file.getBytes(),uuid);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+    public String fallBack2(@RequestParam("uploadImg")MultipartFile file,@RequestParam("uuid") String uuid){
+
+        String[] values=verifyService.threadUUIDMap.get(uuid);
+        verifyService.consoleThreadMap.get(values[0]).interrupt();
+        verifyService.consoleThreadMap.get(values[1]).interrupt();
+        verifyService.threadUUIDMap.remove(uuid);
         return "服务器忙,请重试";
     }
     @Autowired
     RecordService recordService;
     @GetMapping("")
     public String home(HttpServletRequest request){
-        String ip=getIPAddress(request);
+        String ip= HttpClient.getIPAddress(request);
         recordService.record(ip);
         return "home";
     }
 
-    public static String getIPAddress(HttpServletRequest request) {
-        String ip = null;
 
-        //X-Forwarded-For：Squid 服务代理
-        String ipAddresses = request.getHeader("X-Forwarded-For");
-
-        if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) {
-            //Proxy-Client-IP：apache 服务代理
-            ipAddresses = request.getHeader("Proxy-Client-IP");
-        }
-
-        if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) {
-            //WL-Proxy-Client-IP：weblogic 服务代理
-            ipAddresses = request.getHeader("WL-Proxy-Client-IP");
-        }
-
-        if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) {
-            //HTTP_CLIENT_IP：有些代理服务器
-            ipAddresses = request.getHeader("HTTP_CLIENT_IP");
-        }
-
-        if (ipAddresses == null || ipAddresses.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) {
-            //X-Real-IP：nginx服务代理
-            ipAddresses = request.getHeader("X-Real-IP");
-        }
-
-        //有些网络通过多层代理，那么获取到的ip就会有多个，一般都是通过逗号（,）分割开来，并且第一个ip为客户端的真实IP
-        if (ipAddresses != null && ipAddresses.length() != 0) {
-            ip = ipAddresses.split(",")[0];
-        }
-
-        //还是不能获取到，最后再通过request.getRemoteAddr();获取
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ipAddresses)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
-    }
-    public String fallBack1(@RequestParam("base64")String base64){
-        return "服务器忙,请重试";
-    }
 
     @PostMapping("/base64")
     @ResponseBody
-    @HystrixCommand(fallbackMethod = "fallBack1")
-    public String base(@RequestParam("base64")String base64){
+    @HystrixCommand(fallbackMethod = "fallBack1",commandProperties = {
+            @HystrixProperty(name="circuitBreaker.enabled",value = "true"), //断路器使能
+            @HystrixProperty(name="circuitBreaker.requestVolumeThreshold",value = "10"),//10次请求中 CLOSE
+            @HystrixProperty(name="circuitBreaker.errorThresholdPercentage",value = "60"),//有60%出错\超时则熔断 OPEN
+            @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds",value = "10000") //10秒后半开尝试 HALF-OPEN
+    })
+    public String base(@RequestParam("base64")String base64,@RequestParam("uuid") String uuid)  {
+        VAILD_REQUEST_NUMBER.getAndIncrement();
         if(verifyService.isBase64(base64))
-            return verifyService.proccess(Base64.getDecoder().decode(base64));
+            return verifyService.proccess(Base64.getDecoder().decode(base64),uuid);
         return "base64 校验失败";
     }
-
+    public String fallBack1(@RequestParam("base64")String base64,@RequestParam("uuid") String uuid){
+        String[] values=verifyService.threadUUIDMap.get(uuid);
+        verifyService.consoleThreadMap.get(values[0]).interrupt();
+        verifyService.consoleThreadMap.get(values[1]).interrupt();
+        verifyService.threadUUIDMap.remove(uuid);
+        return "服务器忙,请重试";
+    }
     @GetMapping("/ip")
     @ResponseBody
     public ConcurrentHashMap ip(){
         return recordService.map;
+    }
+    @GetMapping("/vrn")
+    @ResponseBody
+    public int getVaildRequestNumber(){
+        return VAILD_REQUEST_NUMBER.get();
     }
 }

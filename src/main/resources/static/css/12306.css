@@ -1,0 +1,124 @@
+* {
+    font-family: 微软雅黑;
+    margin: 0;
+    padding: 0;
+}
+
+.jquery-fileupload, .base64 {
+    float:left;
+
+    width: 300px;
+}
+.container{
+    width: 960px;
+    margin: auto;
+    height: 500px;
+}
+.base64{
+    float:right;
+}
+
+/* input样式 */
+#uploadImg {
+    display: none;
+}
+
+/* button样式 */
+button {
+    border: none;
+    outline: none;
+    width: 100px;
+    height: 30px;
+    color: white;
+    margin-bottom: 3px;
+    margin-right: 5px;
+
+}
+
+#chooseFile,#randomCrawling {
+    background: #606060;
+}
+
+#uploadFile, #rechooseFile{
+    display: none;
+    background: #606060;
+}
+.crack span{
+    background: #c0c0c0;
+    font-size: 14px;
+    width: 50px;
+    text-align: center;
+    display: inline-block;
+    color: crimson;
+    margin-top: 4px;
+}
+#image {
+    width: 300px;
+    height: 200px;
+}
+#randomImage{
+    width: 300px;
+    height: 200px;
+}
+
+.random{
+    float: left;
+    margin-left:30px;
+}
+/* 进度条样式 */
+.bar {
+    background-image: -webkit-linear-gradient(top, #5cb85c 0, #449d44 100%);
+    background-image: -o-linear-gradient(top, #5cb85c 0, #449d44 100%);
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#5cb85c), to(#449d44));
+    background-image: linear-gradient(to bottom, #5cb85c 0, #449d44 100%);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5cb85c', endColorstr='#ff449d44', GradientType=0);
+    background-repeat: repeat-x;
+    height: 20px;
+    line-height: 20px;
+    -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .15);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .15);
+    -webkit-transition: width .6s ease;
+    -o-transition: width .6s ease;
+    transition: width .6s ease;
+}
+
+#progress {
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffebebeb', endColorstr='#fff5f5f5', GradientType=0);
+    background-repeat: repeat-x;
+    height: 20px;
+    width: 0%;
+    margin-bottom: 20px;
+    overflow: hidden;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .1);
+    margin-top: 20px;
+}
+.header{
+    width: 100%;
+    height: 60px;
+    line-height: 60px;
+    background: #007d65;
+    box-shadow: 2px 2px 2px #CCCCCC;
+    margin-bottom: 20px;
+    padding-left: 40px;
+    color: #f2eada;
+}
+.headline{
+    height: 45px;
+    line-height: 45px;
+
+    color: #77ac98;
+}
+.invocation,.footer{
+    margin: auto;
+    width: 960px;
+}
+#submit{
+    background:  #606060;;
+}
+.invocation img{
+    width:960px;
+    height:127px;
+}
