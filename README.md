@@ -29,7 +29,7 @@ maven依赖
  ```
 Online Demo
 =
-[demo演示地址](http://www.dill.fun/)
+[demo演示地址](http://www.dill.fun/)  (即将关闭服务）
 
 [demo源码地址](https://github.com/vua/Java12306/tree/web)
 <p align="left">
