@@ -35,3 +35,5 @@ Online Demo
 <p align="left">
 	<img src="https://github.com/vua/Java12306/blob/master/image/dill.fun.png" alt="Sample" >
 </p>
+抢票自动化测试
+=
