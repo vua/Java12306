@@ -38,7 +38,7 @@ public class Main {
     public static void main(String[] args) {
 
         //85.0.4183.102
-        login("531218020@qq.com", "2018vua");
+        login("531218020@qq.com", "****");
 
     }
 
